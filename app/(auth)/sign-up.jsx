@@ -1,35 +1,53 @@
 import { useState } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, Image } from "react-native";
+import { View, Text, ScrollView, Image, Alert,Dimensions } from "react-native";
 
 import { images } from "../../constants";
 
 import FormField from '../../components/FormField';
-import CustomButton from '../../components/CustomButton'
+import CustomButton from '../../components/CustomButton';
+import { createUser } from "../../lib/appwrite";
+import { useGlobalContext } from "../../context/GlobalProvider";
+
 
 const SignUp = () => {
+  const { setUser, setIsLogged } = useGlobalContext();
 
+  const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    username: '',
-    email: '',
-    password: '',
+    username: "",
+    email: "",
+    password: "",
   });
 
-  const [isSubmitting, setisSubmitting] = useState(false)
+  const submit = async () => {
+    if (form.username === "" || form.email === "" || form.password === "") {
+      Alert.alert("Error", "Please fill in all fields");
+    }
 
-  const submit =() =>{ 
+    setSubmitting(true);
+    try {
+      const result = await createUser(form.email, form.password, form.username);
+      setUser(result);
+      setIsLogged(true);
 
+      router.replace("/home");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-  }
-
-  
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View
           className="w-full flex justify-center h-full px-4 my-6"
-      
+          style={{
+            minHeight: Dimensions.get("window").height - 100,
+          }}
         >
           <Image
             source={images.logo}
@@ -86,5 +104,6 @@ const SignUp = () => {
     </SafeAreaView>
   );
 };
+
 
 export default SignUp;
